@@ -79,3 +79,52 @@ input:focus, select:focus, textarea:focus{box-shadow:0 0 18px rgba(255,0,60,0.18
   .mobile-menu{display:inline-block}
   .features{grid-template-columns:1fr}
 }
+/* General body setup */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: white;
+  position: relative;
+}
+
+/* Page-specific backgrounds */
+body.home {
+  background-image: url('../images/bg-home.jpg.jpg');
+}
+
+body.login {
+  background-image: url('../images/bg-login.jpg.jpg');
+}
+
+body.dashboard {
+  background-image: url('../images/bg-dashboard.jpg.png');
+}
+
+body.search {
+  background-image: url('../images/bg-search.jpg');
+}
+
+body.donate {
+  background-image: url('../images/bg-donate.jpg');
+}
+
+body.request {
+  background-image: url('../images/bg-request.jpg');
+}
+
+body.contact {
+  background-image: url('../images/bg-contact.jpg');
+}
+
+/* Optional dark overlay so text is readable */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6); /* semi-transparent black */
+  z-index: -1;
+}
