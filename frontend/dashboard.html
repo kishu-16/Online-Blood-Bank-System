@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">🩸 BloodLink</a>
+      <nav class="nav">
+        <a class="nav-btn" href="dashboard.html">Dashboard</a>
+        <a class="nav-btn" href="search.html">Search</a>
+        <a class="nav-btn" href="donate.html">Donate</a>
+        <a class="nav-btn" href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="page-title">Your Dashboard</h2>
+
+    <div id="roleCards" class="grid-cards">
+      <!-- populated by JS -->
+    </div>
+
+    <section class="card">
+      <h3>Live Blood Availability</h3>
+      <div id="dashboard-bags" class="dashboard"></div>
+    </section>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('bb_user') || 'null');
+    if (!user) { location.href = 'login.html'; }
+    document.querySelector('.page-title').textContent = `Welcome, ${user.name || 'User'}`;
+
+    // Render role-specific quick actions
+    const roleCards = document.getElementById('roleCards');
+    if (user.role === 'DONOR') {
+      roleCards.innerHTML = `
+        <div class="action-card"><h4>🩸 Donate Now</h4><p>Schedule a donation</p><a class="btn btn-primary" href="donate.html">Donate Now</a></div>
+        <div class="action-card"><h4>📜 Donation History</h4><p>View past donations</p><a class="btn btn-outline" href="#">History</a></div>
+        <div class="action-card"><h4>🏥 Nearby Banks</h4><p>Find centers near you</p><a class="btn btn-ghost" href="#">Locate</a></div>`;
+    } else if (user.role === 'PATIENT' || user.role === 'HOSPITAL') {
+      roleCards.innerHTML = `
+        <div class="action-card"><h4>🔍 Search Blood</h4><a class="btn btn-primary" href="search.html">Search</a></div>
+        <div class="action-card"><h4>📥 Request Blood</h4><a class="btn btn-outline" href="request.html">Request</a></div>
+        <div class="action-card"><h4>📦 My Requests</h4><a class="btn btn-ghost" href="#">My Requests</a></div>`;
+    } else if (user.role === 'ADMIN') {
+      roleCards.innerHTML = `
+        <div class="action-card"><h4>👥 Manage Users</h4><a class="btn btn-primary" href="admin.html">Manage</a></div>
+        <div class="action-card"><h4>🩸 Manage Stock</h4><a class="btn btn-outline" href="admin.html">Stock</a></div>
+        <div class="action-card"><h4>✅ Approve Requests</h4><a class="btn btn-ghost" href="admin.html">Approve</a></div>`;
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('bb_token'); localStorage.removeItem('bb_user'); location.href='index.html'; });
+
+    // Mini dashboard bags - fetch from backend if available else demo
+    async function loadBags(){
+      const target = document.getElementById('dashboard-bags');
+      target.innerHTML = '';
+      const groups = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+      // Try to fetch live counts from backend endpoint (you can add one)
+      let counts = null;
+      try {
+        const res = await fetch('http://localhost:8080/api/admin/stock'); // optional endpoint
+        if (res.ok) counts = await res.json();
+      } catch(e){ counts = null; }
+      groups.forEach(g=>{
+        let units = counts && counts[g] != null ? counts[g] : Math.floor(Math.random()*80);
+        target.innerHTML += `
+          <div class="blood-card" data-group="${g}">
+            <h4>${g}</h4>
+            <div class="blood-bag"><div class="fill" style="height:${Math.min(units,100)}%"></div></div>
+            <p class="units">${units} units</p>
+          </div>`;
+      });
+    }
+    loadBags();
+    setInterval(loadBags, 8000);
+  </script>
+</body>
+</html>

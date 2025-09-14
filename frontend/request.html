@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Request Blood — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="mini-header"><a class="brand" href="index.html">🩸 BloodLink</a></header>
+  <main class="container">
+    <div class="card">
+      <h2>Request Blood</h2>
+      <form id="requestForm">
+        <select id="reqGroup" required>
+          <option value="">Select Blood Group</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+        </select>
+        <input id="reqCity" placeholder="City" required />
+        <input id="reqUnits" type="number" placeholder="Units required" min="1" value="1" required />
+        <textarea id="reqDetails" placeholder="Details (hospital, urgency)"></textarea>
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Submit Request</button>
+          <button class="btn btn-outline" type="button" onclick="location.href='dashboard.html'">Track Request</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    // Prefill from search results if present
+    const pf = JSON.parse(localStorage.getItem('req_prefill') || 'null');
+    if (pf) {
+      if (pf.bloodGroup) document.getElementById('reqGroup').value = pf.bloodGroup;
+      if (pf.userId) document.getElementById('reqDetails').value = 'Requesting from donor: '+pf.userId;
+      localStorage.removeItem('req_prefill');
+    }
+
+    document.getElementById('requestForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = {
+        requesterId: (JSON.parse(localStorage.getItem('bb_user') || 'null') || {}).id || 'anon',
+        bloodGroup: document.getElementById('reqGroup').value,
+        city: document.getElementById('reqCity').value.trim(),
+        details: document.getElementById('reqDetails').value.trim()
+      };
+      showLoader();
+      try {
+        const res = await fetch('http://localhost:8080/api/request/create', {method:'POST', headers:{'Content-Type':'application/json', ...authHeaders()}, body: JSON.stringify(payload)});
+        hideLoader();
+        if (res.ok) { showToast('Request submitted ✓'); location.href='dashboard.html'; }
+        else { const t = await res.text(); showToast('Error: '+t, true); }
+      } catch(err) { hideLoader(); showToast('Network error', true); }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login / Signup — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="mini-header">
+    <a class="brand" href="index.html">🩸 BloodLink</a>
+  </header>
+
+  <main class="container">
+    <div class="card auth-card">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input id="loginEmail" type="email" placeholder="Email" required />
+        <input id="loginPassword" type="password" placeholder="Password" required />
+        <button class="btn btn-primary" type="submit">Login</button>
+        <div class="tiny-links">
+          <a href="register.html">Create account</a> · <a href="#" id="forgotPwd">Forgot Password</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card auth-card">
+      <h2>Signup</h2>
+      <form id="signupForm">
+        <input id="suName" placeholder="Full name" required />
+        <input id="suEmail" type="email" placeholder="Email" required />
+        <input id="suPassword" type="password" placeholder="Password (min 6)" minlength="6" required />
+        <select id="suRole">
+          <option value="DONOR">Donor</option>
+          <option value="PATIENT">Recipient</option>
+          <option value="HOSPITAL">Hospital</option>
+        </select>
+        <input id="suContact" placeholder="Contact (optional)" />
+        <input id="suCity" placeholder="City" />
+        <button class="btn btn-outline" type="submit">Signup</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    // Login handler
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = {
+        email: document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPassword').value
+      };
+      const res = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('bb_token', data.token);
+        localStorage.setItem('bb_user', JSON.stringify(data.user));
+        showToast('Logged in ✓');
+        window.location.href = 'dashboard.html';
+      } else {
+        showToast('Login failed', true);
+      }
+    });
+
+    // Signup handler
+    document.getElementById('signupForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('suName').value.trim(),
+        email: document.getElementById('suEmail').value.trim(),
+        password: document.getElementById('suPassword').value,
+        role: document.getElementById('suRole').value,
+        contact: document.getElementById('suContact').value.trim(),
+        city: document.getElementById('suCity').value.trim()
+      };
+      const res = await fetch('http://localhost:8080/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if (res.ok) { showToast('Registered ✓ — login now'); window.location.href='login.html'; }
+      else { const t = await res.text(); showToast('Signup error: '+t, true); }
+    });
+  </script>
+</body>
+</html>

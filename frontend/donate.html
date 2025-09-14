@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Donate — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="mini-header"><a class="brand" href="index.html">🩸 BloodLink</a></header>
+  <main class="container">
+    <div class="card">
+      <h2>Donor Form</h2>
+      <form id="donorForm">
+        <input id="donName" placeholder="Full name" required />
+        <input id="donEmail" type="email" placeholder="Email" required />
+        <select id="donGroup" required>
+          <option value="">Select Blood Group</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+        </select>
+        <input id="donCity" placeholder="City" required />
+        <label>Schedule donation: <input id="donDate" type="date" required></label>
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Submit Donation Form</button>
+          <button class="btn btn-outline" type="button" onclick="location.href='dashboard.html'">Back to Dashboard</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    document.getElementById('donorForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('donName').value.trim(),
+        email: document.getElementById('donEmail').value.trim(),
+        bloodGroup: document.getElementById('donGroup').value,
+        city: document.getElementById('donCity').value.trim(),
+        scheduleDate: document.getElementById('donDate').value
+      };
+      showLoader();
+      try {
+        // Save user + donor: backend endpoints used earlier (register + donor/add)
+        // Here we call donor/add directly; in real flow, user should register/login then add donor record
+        const res = await fetch('http://localhost:8080/api/donor/add', {method:'POST', headers:{'Content-Type':'application/json', ...authHeaders()}, body: JSON.stringify({ userId: payload.email, bloodGroup: payload.bloodGroup, city: payload.city, available: true, lastDonationDate: payload.scheduleDate })});
+        hideLoader();
+        if (res.ok) { showToast('Donation scheduled ✓'); location.href='dashboard.html'; }
+        else { const t = await res.text(); showToast('Error: '+t, true); }
+      } catch(err) { hideLoader(); showToast('Network error', true); }
+    });
+  </script>
+</body>
+</html>

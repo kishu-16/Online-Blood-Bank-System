@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner"><a class="brand" href="index.html">🩸 BloodLink (Admin)</a></div>
+  </header>
+
+  <main class="container">
+    <h2>Admin Panel</h2>
+    <div class="grid-cards">
+      <div class="card action-card">
+        <h4>Manage Users</h4>
+        <button class="btn btn-primary" id="loadUsers">Load Users</button>
+        <div id="usersList"></div>
+      </div>
+      <div class="card action-card">
+        <h4>Manage Requests</h4>
+        <button class="btn btn-outline" id="loadReq">Load Requests</button>
+        <div id="reqList"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    document.getElementById('loadUsers').addEventListener('click', async ()=>{
+      showLoader();
+      try {
+        const res = await fetch('http://localhost:8080/api/admin/users', {headers: authHeaders()});
+        hideLoader();
+        if (!res.ok) { showToast('Admin access required', true); return; }
+        const users = await res.json();
+        document.getElementById('usersList').innerHTML = users.map(u=>`<div class="mini">${u.name} — ${u.email} — ${u.role}</div>`).join('');
+      } catch(e){ hideLoader(); showToast('Network error', true); }
+    });
+
+    document.getElementById('loadReq').addEventListener('click', async ()=>{
+      showLoader();
+      try {
+        const res = await fetch('http://localhost:8080/api/request/all', {headers: authHeaders()});
+        hideLoader();
+        if (!res.ok) { showToast('Failed', true); return; }
+        const reqs = await res.json();
+        document.getElementById('reqList').innerHTML = reqs.map(r=>`<div class="mini">${r.bloodGroup} — ${r.city} — ${r.status}</div>`).join('');
+      } catch(e){ hideLoader(); showToast('Network error', true); }
+    });
+  </script>
+</body>
+</html>

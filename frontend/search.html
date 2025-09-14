@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Search Blood — BloodLink</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="mini-header"><a class="brand" href="index.html">🩸 BloodLink</a></header>
+  <main class="container">
+    <div class="card search-card">
+      <h2>Search Donors</h2>
+      <form id="searchForm">
+        <select id="searchGroup" required>
+          <option value="">Select Blood Group</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+        </select>
+        <input id="searchCity" placeholder="City (optional)" />
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Search</button>
+          <button class="btn btn-outline" type="button" id="resetBtn">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="searchResults" class="results-grid"></div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    document.getElementById('resetBtn').addEventListener('click', ()=> {
+      document.getElementById('searchGroup').value = '';
+      document.getElementById('searchCity').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const group = document.getElementById('searchGroup').value;
+      const city = document.getElementById('searchCity').value.trim();
+      const q = new URLSearchParams({group, city}).toString();
+      showLoader();
+      try {
+        const res = await fetch('http://localhost:8080/api/blood/search?'+q);
+        hideLoader();
+        if (!res.ok) { showToast('Search failed', true); return; }
+        const donors = await res.json();
+        const target = document.getElementById('searchResults');
+        if (!donors || donors.length === 0) { target.innerHTML = '<p class="muted">No donors found</p>'; return; }
+        target.innerHTML = donors.map(d => `
+          <div class="donor-card card">
+            <div class="donor-top"><strong>${d.bloodGroup}</strong><span class="pill">${d.city || 'Unknown'}</span></div>
+            <div class="donor-body">Contact: ${d.contact || d.userId || 'N/A'}</div>
+            <div class="donor-actions">
+              <button class="btn btn-outline" onclick="openRequest('${d.id || d.userId}','${d.bloodGroup}')">Request Blood</button>
+              <button class="btn btn-ghost" onclick="contact('${d.contact || 'N/A'}')">Contact</button>
+            </div>
+          </div>`).join('');
+      } catch(err) { hideLoader(); showToast('Network error', true); }
+    });
+
+    function openRequest(userId, bloodGroup){
+      // prefill request page params
+      localStorage.setItem('req_prefill', JSON.stringify({userId, bloodGroup}));
+      window.location.href = 'request.html';
+    }
+    function contact(contact){ alert('Contact: '+contact); }
+  </script>
+</body>
+</html>
